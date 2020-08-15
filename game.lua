@@ -151,7 +151,6 @@ end
 local function game_over()
     -- We grab the high score currently saved
     lastHighScore = score.load()
-    print("Last high score is" .. lastHighScore)
 
     if lastHighScore == nil then lastHighScore = 0 end
     -- If the current score is higher
