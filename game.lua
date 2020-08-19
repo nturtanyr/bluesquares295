@@ -1,9 +1,81 @@
 -- Initial module load
 local composer = require( "composer" )
 local score = require( "score" )
+local colours = require( "colours" )
 
 -- Define this as a scene
 local scene = composer.newScene()
+
+score.gpgs = nil
+score.gameCenter = nil
+ 
+local platform = system.getInfo( "platform" )
+local env = system.getInfo( "environment" )
+ 
+if ( platform == "android" and env ~= "simulator" ) then
+    score.gpgs = require( "plugin.gpgs.v2" )
+elseif ( platform == "ios" and env ~= "simulator" ) then
+    score.gameCenter = require( "gameNetwork" )
+end
+
+-- Google Play Games Services initialization/login listener
+local function gpgsInitListener( event )
+ 
+    if not event.isError then
+        if ( event.name == "login" ) then  -- Successful login event
+            print( json.prettify(event) )
+        end
+    end
+end
+
+-- Initialize game network based on platform
+if ( score.gpgs ) then
+    -- Initialize Google Play Games Services
+    score.gpgs.login( { userInitiated=true, listener=gpgsInitListener } )
+ 
+
+end
+
+local function submitScoreListener( event )
+ 
+    -- Google Play Games Services score submission
+    if ( score.gpgs ) then
+ 
+        if not event.isError then
+            local isBest = nil
+            if ( event.scores["daily"].isNewBest ) then
+                isBest = "a daily"
+            elseif ( event.scores["weekly"].isNewBest ) then
+                isBest = "a weekly"
+            elseif ( event.scores["all time"].isNewBest ) then
+                isBest = "an all time"
+            end
+            if isBest then
+                -- Congratulate player on a high score
+                local message = "You set " .. isBest .. " high score!"
+                native.showAlert( "Congratulations", message, { "OK" } )
+            else
+                -- Encourage the player to do better
+                native.showAlert( "Sorry...", "Better luck next time!", { "OK" } )
+            end
+        end
+    end
+end
+
+local function submitScore( scorevalue )
+ 
+    if ( score.gpgs ) then
+        -- Submit a score to Google Play Games Services
+        score.gpgs.leaderboards.submit(
+        {
+            leaderboardId = "CgkI8bL9x4YREAIQAA",
+            score = scorevalue,
+            listener = submitScoreListener
+        })
+    end
+end
+-- Loud sound effects
+local boxSound = audio.loadSound( "pop.wav" )
 
 -- Make the background white
 display.setDefault("background", 255, 255, 255, 1);
@@ -11,6 +83,8 @@ game_background_display = display.newGroup()
 game_board_display = display.newGroup()
 game_ui_display = display.newGroup()
 
+-- Define current colour scheme
+colour_option = 2
 
 -- Get the current space size
 phoneYSize = display.contentHeight
@@ -69,6 +143,7 @@ local function tapFunction(self, event)
     if self.heatUp > 0
     then
         -- We register it as being tapped
+        audio.play( boxSound )
         self.tapped = true
     end
 end
@@ -90,8 +165,6 @@ local function setupBox(xCoords, yCoords)
     local box = display.newRect(phoneXCentre + (boxSize + 5)*(xCoords - 2.5), phoneYCentre + (boxSize + 5)*(yCoords - 2.5), boxSize, boxSize)
     -- Chuck it in to the game_board_display group
     game_board_display:insert(box)
-    -- Colours it blue
-    box:setFillColor(0,0,1,1);
     -- Create the listener and relate it to the tapFunction defined earlier
     box:addEventListener("tap", box )
     box.tap = tapFunction
@@ -106,6 +179,8 @@ local function setupBox(xCoords, yCoords)
 
     -- It's starts off as cold as it gets
     box.heatUp = 0
+    -- Colours it blue
+    colours.change_colour(box, colour_option)
 
     -- It also has not been tapped
     box.tapped = false
@@ -159,6 +234,7 @@ local function game_over()
         -- We replace it in the stored variable
         print("Saving the score")
         score.save();
+        submitScore(score.get())
     end
 end
 
@@ -185,8 +261,7 @@ end
 local function setup_game()
 
 
-    lastHighScore = score.load()
-    print("Last high score is" .. lastHighScore)
+    --print("Last high score is" .. lastHighScore)
     -- Then setup all boxes in the 4x4 format, storing them in the table boxGrid
     for i=1,4 do 
         for j=1,4 do
@@ -226,6 +301,13 @@ local function setup_game()
 
     countDownTimer = timer.performWithDelay( 1000, countDown_countDown, 4);
 
+
+    lastHighScore = score.load()
+    if lastHighScore == nil
+    then
+        score.set(0)
+        score.save()
+    end
 end
 
 -- Define the function for when the "replay" button is pressed
@@ -348,55 +430,9 @@ local function reset_box(box)
             box.coolDown = math.random(box.coolDownLimit);
 
             -- And the box is now blue again
-            box:setFillColor(0,0,1,1);
+            colours.change_colour(box, colour_option)
         end
     end
-end
-
--- Define the function by which the box changes colour
-local function change_colour(box)
-    -- We change colour based on its current "heat"
-    time = box.heatUp
-
-    -- Set some initial RGB values
-    r = 0
-    g = 0
-    b = 0
-
-    -- This is all the mathematical function of how the RGB values change according to time
-    sectionLength = box.heatUpLimit / 4
-    sec1 = 1*sectionLength
-    sec2 = 2*sectionLength
-    sec3 = 3*sectionLength
-    sec4 = 4*sectionLength
-
-    timeStep = 1/sectionLength
-    if time < sec1
-    then
-        b = 1
-        r = 0
-        g = timeStep*time
-        box:setFillColor(r,g,b,1);
-    elseif time >= sec1 and time < sec2
-    then
-        b = 1 - timeStep*(time-sec1)
-        r = 0
-        g = 1
-        box:setFillColor(r,g,b,1);
-    elseif time >= sec2 and time < sec3
-    then
-        b = 0
-        r = timeStep*(time-sec2)
-        g = 1
-        box:setFillColor(r,g,b,1);
-    elseif time >= sec3 and time < sec4
-    then
-        b = 0
-        r = 1
-        g = 1 - timeStep*(time-sec3)
-        box:setFillColor(r,g,b,1);
-    end
-
 end
 
 -- Define the actual game loop that runs the game
@@ -470,7 +506,7 @@ local function gameLoop( event )
                 -- So we heat it up
                 currentBox.heatUp = currentBox.heatUp + 1;
                 -- And have it change colour to reflect its current heat
-                change_colour(currentBox);
+                colours.change_colour(currentBox, colour_option);
             end
         end
 
@@ -491,7 +527,6 @@ function scene:create( event )
     sceneGroup:insert(game_background_display)
     sceneGroup:insert(game_board_display)
     sceneGroup:insert(game_ui_display)
-
  
 end
 

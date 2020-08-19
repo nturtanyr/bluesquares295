@@ -22,6 +22,7 @@ settings =
 		{
 			"android.permission.INTERNET",
 		},
+        googlePlayGamesAppId = "585877117297-pde8slanui93bntkkqnjnuruhqvqks89.apps.googleusercontent.com",
 	},
 
 	--
@@ -41,9 +42,13 @@ settings =
 	-- Plugins section
 	--
 	plugins =
-	{
-
-	},
+    {
+        ["plugin.gpgs.v2"] =
+        {
+            publisherId = "com.coronalabs",
+            supportedPlatforms = { android=true }
+        },
+    },
 
 	--
 	-- Project section
