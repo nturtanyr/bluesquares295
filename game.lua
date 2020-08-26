@@ -78,13 +78,13 @@ end
 local boxSound = audio.loadSound( "pop.wav" )
 
 -- Make the background white
-display.setDefault("background", 255, 255, 255, 1);
 game_background_display = display.newGroup()
 game_board_display = display.newGroup()
 game_ui_display = display.newGroup()
 
 -- Define current colour scheme
 colour_option = 2
+boxNumbers = false;
 
 -- Get the current space size
 phoneYSize = display.contentHeight
@@ -170,8 +170,8 @@ local function setupBox(xCoords, yCoords)
     box.tap = tapFunction
 
     -- Define it's coords so we can debug if necessary
-    box.xCoords = xCoords
-    box.yCoords = yCoords
+    box.xCoords = phoneXCentre + (boxSize + 5)*(xCoords - 2.5)
+    box.yCoords = phoneYCentre + (boxSize + 5)*(yCoords - 2.5)
 
     -- Define the time that it takes for it to heatUp based off the maximum
     -- This will change as the game progress
@@ -179,8 +179,6 @@ local function setupBox(xCoords, yCoords)
 
     -- It's starts off as cold as it gets
     box.heatUp = 0
-    -- Colours it blue
-    colours.change_colour(box, colour_option)
 
     -- It also has not been tapped
     box.tapped = false
@@ -189,6 +187,14 @@ local function setupBox(xCoords, yCoords)
     box.coolDownLimit = maxCoolDownLimit
     -- And set this to instead be a random value between 0 and that value
     box.coolDown = math.random(box.coolDownLimit);
+    if (boxNumbers)
+    then
+        print("Creating box text")
+        box.overlayText = display.newText(game_ui_display,tostring(box.heatUpLimit - box.heatUp), box.xCoords, box.yCoords, "Arial", 24)
+        colours.set_TextColour(box.overlayText)
+    end
+    -- Colours it blue
+    colours.change_colour(box, colour_option, boxNumbers)
 
     -- Returns the variable to be stored
     return box
@@ -297,7 +303,7 @@ local function setup_game()
     --Set the countDown
     countDown_num =  3
     countDown = display.newText(game_ui_display, countDown_num, countDownCenterX, countDownCenterY, "Arial" , 32);
-    countDown:setFillColor(0,0,0.75)
+    colours.set_TextColour(countDown)
 
     countDownTimer = timer.performWithDelay( 1000, countDown_countDown, 4);
 
@@ -430,7 +436,7 @@ local function reset_box(box)
             box.coolDown = math.random(box.coolDownLimit);
 
             -- And the box is now blue again
-            colours.change_colour(box, colour_option)
+            colours.change_colour(box, colour_option, boxNumbers)
         end
     end
 end
@@ -488,7 +494,7 @@ local function gameLoop( event )
                 -- We display the game over text
                 gameOverText = display.newText( "Game Over", phoneXSize/2, phoneYSize/2, "Arial", 32);
                 game_ui_display:insert(gameOverText)
-                gameOverText:setFillColor( 0, 0, 0 );
+                colours.set_MainColour(gameOverText)
                 print("Game Over");
 
                 -- we remove the tap all button
@@ -506,7 +512,8 @@ local function gameLoop( event )
                 -- So we heat it up
                 currentBox.heatUp = currentBox.heatUp + 1;
                 -- And have it change colour to reflect its current heat
-                colours.change_colour(currentBox, colour_option);
+                print()
+                colours.change_colour(currentBox, colour_option, boxNumbers);
             end
         end
 
@@ -537,11 +544,13 @@ function scene:show( event )
 	local phase = event.phase
 
 	if ( phase == "will" ) then
-		-- Code here runs when the scene is still off screen (but is about to come on screen)
+        -- Code here runs when the scene is still off screen (but is about to come on screen)
+        colours.set_BackgroundColour()
 
 	elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         -- So we set-up our game
+        boxNumbers = (colours.loadBoxNumbers() == "show")
         setup_game();
         -- Begin the game timer to start the game
         tm = timer.performWithDelay( 16, gameLoop, 0);

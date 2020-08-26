@@ -1,5 +1,6 @@
 local composer = require( "composer" )
- 
+local colours = require( "colours" )
+
 local scene = composer.newScene()
 
 -- -----------------------------------------------------------------------------------
@@ -15,6 +16,15 @@ local function gotoGame()
     composer.gotoScene("game",options);
 end
 
+
+local function gotoOptions()
+	local options = {
+		effect = "fade",
+		time = 500
+	}
+    composer.gotoScene("options",options);
+end
+
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -25,10 +35,11 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    display.setDefault("background", 255, 255, 255, 1);
-    local playButton = display.newText( sceneGroup, "Play", display.contentCenterX, display.contentCenterY, native.systemFont, 44 )
-    playButton:setFillColor( 0, 0, 0 )
-    playButton:addEventListener( "tap", gotoGame )
+    playButton = display.newText( sceneGroup, "Play", display.contentCenterX, display.contentCenterY, native.systemFont, 44 )
+	playButton:addEventListener( "tap", gotoGame )
+	
+    optionsButton = display.newText( sceneGroup, "Options", display.contentCenterX, display.contentCenterY + 100, native.systemFont, 36 )
+	optionsButton:addEventListener( "tap", gotoOptions )
  
 end
 
@@ -39,6 +50,9 @@ function scene:show( event )
 	local phase = event.phase
 
 	if ( phase == "will" ) then
+		colours.set_BackgroundColour()
+		colours.set_TextColour(playButton)
+		colours.set_TextColour(optionsButton)
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
 
 	elseif ( phase == "did" ) then

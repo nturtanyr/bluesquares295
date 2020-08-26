@@ -8,8 +8,14 @@
 -- Colour gradient used
 local C = {}
 
-function C.change_colour(box , num)
+function C.change_colour(box , num, show)
     
+    if (show)
+    then
+        print("Showing new value as "..tostring(box.heatUpLimit - box.heatUp))
+        box.overlayText.text = (tostring(box.heatUpLimit - box.heatUp))
+    end
+
     if num == 0
     then C.gradient_bgr(box)
     elseif num ==1
@@ -17,7 +23,71 @@ function C.change_colour(box , num)
     elseif num ==2
     then C.gradient_yg(box)
     end
+
 end
+
+function C.saveBoxNumbers(value)
+ 
+    local saved = system.setPreferences( "app", { boxNumbers = value } )
+    if ( saved == false ) then
+        print( "ERROR: could not save base mode" )
+    end
+end
+ 
+function C.loadBoxNumbers()
+ 
+    local value = system.getPreference( "app", "boxNumbers", "string" )
+    return value
+end
+
+
+function C.saveDarkMode(value)
+ 
+    local saved = system.setPreferences( "app", { darkMode = value } )
+    if ( saved == false ) then
+        print( "ERROR: could not save base mode" )
+    end
+end
+ 
+function C.loadDarkMode()
+ 
+    local value = system.getPreference( "app", "darkMode", "string" )
+    return value
+end
+
+function C.set_TextColour(textObject)
+    print("Trying to set text colour")
+    if(C.loadDarkMode() == 'Dark')
+    then
+        textObject:setFillColor(1,1,1)
+    else
+        textObject:setFillColor(0,0,0)
+    end
+    
+end
+
+function C.set_BackgroundColour()
+    print("Trying to set background colour")
+    if(C.loadDarkMode() == 'Dark')
+    then
+        display.setDefault("background", 0, 0, 0, 1);
+    else
+        display.setDefault("background", 255, 255, 255, 1);
+    end
+    
+end
+
+function C.set_MainColour(textObject)
+    print("Trying to set object colour")
+    if(C.loadDarkMode() == 'Dark')
+    then
+        textObject:setFillColor(0,0,0)
+    else
+        textObject:setFillColor(1,1,1)
+    end
+    
+end
+
 
 -- Define the function by which the box changes colour
 function C.gradient_bgr(box)
