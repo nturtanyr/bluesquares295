@@ -8,23 +8,7 @@
 -- Colour gradient used
 local C = {}
 
-function C.change_colour(box , num, show)
-    
-    if (show)
-    then
-        print("Showing new value as "..tostring(box.heatUpLimit - box.heatUp))
-        box.overlayText.text = (tostring(box.heatUpLimit - box.heatUp))
-    end
-
-    if num == 0
-    then C.gradient_bgr(box)
-    elseif num ==1
-    then C.gradient_br(box)
-    elseif num ==2
-    then C.gradient_yg(box)
-    end
-
-end
+C.num_of_options = 3
 
 function C.saveBoxNumbers(value)
  
@@ -55,13 +39,18 @@ function C.loadDarkMode()
     return value
 end
 
-function C.set_TextColour(textObject)
+function C.set_TextColour(textObject, show)
     print("Trying to set text colour")
-    if(C.loadDarkMode() == 'Dark')
+    if(show)
     then
-        textObject:setFillColor(1,1,1)
+        if(C.loadDarkMode() == 'Dark')
+        then
+            textObject:setFillColor(1,1,1,1)
+        else
+            textObject:setFillColor(0,0,0,1)
+        end
     else
-        textObject:setFillColor(0,0,0)
+        textObject:setFillColor(0,0,0,0)
     end
     
 end
@@ -88,6 +77,22 @@ function C.set_MainColour(textObject)
     
 end
 
+function C.change_colour(box, num, show)
+    
+    print("Showing new value as "..tostring(box.heatUpLimit - box.heatUp))
+    box.overlayText.text = (tostring(box.heatUpLimit - box.heatUp))
+    C.set_TextColour(box.overlayText, show)
+
+
+    if num == 0
+    then C.gradient_bgr(box)
+    elseif num ==1
+    then C.gradient_br(box)
+    elseif num ==2
+    then C.gradient_yg(box)
+    end
+
+end
 
 -- Define the function by which the box changes colour
 function C.gradient_bgr(box)

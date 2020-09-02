@@ -51,8 +51,8 @@ function scene:show( event )
 
 	if ( phase == "will" ) then
 		colours.set_BackgroundColour()
-		colours.set_TextColour(playButton)
-		colours.set_TextColour(optionsButton)
+		colours.set_TextColour(playButton, true)
+		colours.set_TextColour(optionsButton, true)
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
 
 	elseif ( phase == "did" ) then

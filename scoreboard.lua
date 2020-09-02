@@ -28,7 +28,7 @@ function scene:create( event )
     sceneGroup:insert(score_board_display)
     sceneGroup:insert(score_ui_display)
  
-    lastHighScore = score.load()
+    lastHighScore = score.loadScore()
 end
  
  

@@ -55,7 +55,7 @@ function M.format_gametime( time )
     return niceTime
 end
 
-function M.init( options )
+function M.initScore( options )
  
     local customOptions = options or {}
     local opt = {}
@@ -69,24 +69,24 @@ function M.init( options )
     return M.scoreText
 end
  
-function M.set( value )
+function M.setScore( value )
  
     M.score = tonumber(value)
     M.scoreText.text = M.format_gametime(M.score)
 end
  
-function M.get()
+function M.getScore()
  
     return M.score
 end
  
-function M.add( amount )
+function M.addScore( amount )
  
     M.score = M.score + tonumber(amount)
     M.scoreText.text = string.format( M.format, M.score )
 end
 
-function M.save()
+function M.saveScore()
  
     local saved = system.setPreferences( "app", { highScore=M.score } )
     if ( saved == false ) then
@@ -94,7 +94,7 @@ function M.save()
     end
 end
  
-function M.load()
+function M.loadScore()
  
     local score = system.getPreference( "app", "highScore", "number" )
  
@@ -104,5 +104,44 @@ function M.load()
         print( "ERROR: could not load score (score may not exist in storage)" )
     end
 end
+
+function M.saveTokens()
+ 
+    local saved = system.setPreferences( "app", { tokenCount=M.tokens } )
+    if ( saved == false ) then
+        print( "ERROR: could not save tokens" )
+    end
+
+end
+
+function M.loadTokens()
+ 
+    local tokens = system.getPreference( "app", "tokenCount", "number" )
+ 
+    if ( tokens ) then
+        return tonumber(tokens)
+    else
+        print( "ERROR: could not load tokens (tokens may not exist in storage)" )
+        return 0
+    end
+
+end
+ 
+function M.subtractTokens( value )
+ 
+    M.tokens = M.tokens - tonumber(value)
+end
+
+function M.addTokens( value )
+ 
+    M.tokens = M.tokens + tonumber(value)
+end
+ 
+function M.getTokens()
+ 
+    return M.tokens
+end
+
+M.tokens = M.loadTokens()  -- Set the tokens to how many we have on our phone
 
 return M

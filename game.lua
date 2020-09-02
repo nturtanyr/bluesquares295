@@ -83,7 +83,7 @@ game_board_display = display.newGroup()
 game_ui_display = display.newGroup()
 
 -- Define current colour scheme
-colour_option = 2
+colour_option = 0
 boxNumbers = false;
 
 -- Get the current space size
@@ -187,13 +187,11 @@ local function setupBox(xCoords, yCoords)
     box.coolDownLimit = maxCoolDownLimit
     -- And set this to instead be a random value between 0 and that value
     box.coolDown = math.random(box.coolDownLimit);
-    if (boxNumbers)
-    then
-        print("Creating box text")
-        box.overlayText = display.newText(game_ui_display,tostring(box.heatUpLimit - box.heatUp), box.xCoords, box.yCoords, "Arial", 24)
-        colours.set_TextColour(box.overlayText)
-    end
-    -- Colours it blue
+    
+    print("Creating box text")
+    box.overlayText = display.newText(game_ui_display,tostring(box.heatUpLimit - box.heatUp), box.xCoords, box.yCoords, "Arial", 24)
+    colours.set_TextColour(box.overlayText, boxNumbers)
+--  Colours it blue
     colours.change_colour(box, colour_option, boxNumbers)
 
     -- Returns the variable to be stored
@@ -231,16 +229,22 @@ end
 -- Define the function for consolidating what happens when we reach Game Over
 local function game_over()
     -- We grab the high score currently saved
-    lastHighScore = score.load()
+    lastHighScore = score.loadScore()
+
+    tokens_won = math.floor(score.getScore() / 1000);
+
+    print("Won "..tokens_won.." tokens")
+    score.addTokens(tokens_won)
+    score.saveTokens()
 
     if lastHighScore == nil then lastHighScore = 0 end
     -- If the current score is higher
-    if tonumber(score.get()) > tonumber(lastHighScore)
+    if tonumber(score.getScore()) > tonumber(lastHighScore)
     then
         -- We replace it in the stored variable
         print("Saving the score")
-        score.save();
-        submitScore(score.get())
+        score.saveScore();
+        submitScore(score.getScore())
     end
 end
 
@@ -292,7 +296,7 @@ local function setup_game()
     
     -- remove the clock from the last play if it exists
     -- Set up the clock, using the initialising function from our score module
-    clock = score.init(
+    clock = score.initScore(
     {
         x = timerCenterX,
         y = timerCenterY
@@ -303,16 +307,16 @@ local function setup_game()
     --Set the countDown
     countDown_num =  3
     countDown = display.newText(game_ui_display, countDown_num, countDownCenterX, countDownCenterY, "Arial" , 32);
-    colours.set_TextColour(countDown)
+    colours.set_TextColour(countDown, true)
 
     countDownTimer = timer.performWithDelay( 1000, countDown_countDown, 4);
 
 
-    lastHighScore = score.load()
+    lastHighScore = score.loadScore()
     if lastHighScore == nil
     then
-        score.set(0)
-        score.save()
+        score.setScore(0)
+        score.saveScore()
     end
 end
 
@@ -449,8 +453,8 @@ local function gameLoop( event )
         -- We record how the player has survived
         inGameTime = system.getTimer() - startTime;
         -- And we set that as their current score
-        score.set(inGameTime)
-        if inGameTime > score.load()
+        score.setScore(inGameTime)
+        if inGameTime > score.loadScore()
         then
             clock:setFillColor(0,1,0)
         else
