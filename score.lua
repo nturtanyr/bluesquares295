@@ -130,11 +130,13 @@ end
 function M.subtractTokens( value )
  
     M.tokens = M.tokens - tonumber(value)
+    M.saveTokens()
 end
 
 function M.addTokens( value )
  
     M.tokens = M.tokens + tonumber(value)
+    M.saveTokens()
 end
  
 function M.getTokens()

@@ -20,6 +20,7 @@ local tm
 boxSize = (display.contentWidth/4) - 10
 gap = (display.contentWidth - 3*boxSize)/4
 
+
 -- Handle press events for the buttons
 local function onDarkModeSwitch( event )
     local switch = event.target
@@ -54,6 +55,31 @@ local function return_menu()
     composer.gotoScene( "menu", options )
 end
 
+local function select_colourbox(self, event )
+    if score.loadTokens() >= self.cost
+    then
+
+        if (self.locked)
+        then
+            score.subtractTokens( self.cost)
+            self.locked = false
+            display.remove(self.lockIconLight)
+            display.remove(self.lockIconDark)
+            display.remove(self.costText)
+            self.cost = 0
+            colours.unlockColourOption(self.index)
+            tokenCountText.text = (score.loadTokens().." tokens")
+        end
+
+        colours.selected_colour = self.index
+        colours.saveSelectedColour()
+        print("Moving to x coord: "..self.x)
+        cursor.x = self.x
+        cursor.y = self.y
+    end
+    
+end
+
 local function setupOption(i)
     
     if (i % 3 == 0)
@@ -73,38 +99,82 @@ local function setupOption(i)
     box:setFillColor(0,0,0);
     -- Flag for telling if an option has been unlocked yet
     -- Show affect whether the "cost" is visible, whether it shows a locked graphic
-    box.unlocked = false
+    box.locked = colours.getLockedStatus(i)
     -- Flag for telling if we show this options as "selected"
     -- In game loop, we check if an option is selected to show cursor
     -- Value is also saved to game preferences
-    box.selected = false
-    box.cost = 600 + (i*100)
-    box.costText = display.newText(box.cost, x, (y+ (boxSize/2)+20), "Arial", 24);
+    box.cost = 0
+
+    if(box.locked)
+    then
+        -- DEBUG - lowering cost
+        box.cost = 600 + (i*100)
+        box.costText = display.newText(box.cost, x, (y+ (boxSize/2)+20), "Arial", 24);
+        colours.set_TextColour(box.costText, true)
+    end
+
+    box.index = i
+    print("Is this box locked? "..tostring(colours.getLockedStatus(i)))
 
     box.heatUpLimit = 300
     box.heatUp = 0
+
+    box:addEventListener("tap", box )
+    box.tap = select_colourbox
     
     box.overlayText = display.newText(tostring(box.heatUpLimit - box.heatUp), x, y, "Arial", 24)
     colours.set_TextColour(box.overlayText, boxNumbers)
     -- Colours it blue
-    colours.change_colour(box, colour_option, boxNumbers)
+    if box.locked
+    then
+        box.lockIconDark = display.newImageRect("lock-icon-dark-52.png", boxSize/2, boxSize/2)
+        box.lockIconDark.x = box.x
+        box.lockIconDark.y = box.y
+
+        box.lockIconLight = display.newImageRect("lock-icon-52.png", boxSize/2, boxSize/2)
+        box.lockIconLight.x = box.x
+        box.lockIconLight.y = box.y
+
+        if colours.loadDarkMode() == "Dark"
+        then
+            box.lockIconLight.isVisible = false
+        else
+            box.lockIconDark.isVisible = false
+        end
+        colours.set_MainColour(box)
+    else
+        colours.change_colour(box, colour_option, boxNumbers)
+    end
 
     return box
 
 end
 
 local function loopColours( event )
-    print("looping - numbers are "..tostring(boxNumbers))
     for i = #coloured_boxes, 1, -1 do
         local currentBox = coloured_boxes[i]
-        if currentBox.heatUp > currentBox.heatUpLimit
-        then 
-            currentBox.heatUp = 0
+        if (not currentBox.locked)
+        then
+            if currentBox.heatUp > currentBox.heatUpLimit
+            then 
+                currentBox.heatUp = 0
+            else
+                currentBox.heatUp = currentBox.heatUp + 1;
+            end
+            
+            colours.change_colour(currentBox, (i-1), boxNumbers)
         else
-            currentBox.heatUp = currentBox.heatUp + 1;
+            if colours.loadDarkMode() == "Dark"
+            then
+                currentBox.lockIconLight.isVisible = false
+                currentBox.lockIconDark.isVisible = true
+            else
+                currentBox.lockIconLight.isVisible = true
+                currentBox.lockIconDark.isVisible = false
+            end
+            colours.set_MainColour(currentBox)
+            colours.set_TextColour(currentBox.costText, true)
         end
-        
-        colours.change_colour(currentBox, (i-1), boxNumbers)
     end
 end
 
@@ -202,7 +272,7 @@ function scene:create( event )
             scrollWidth = display.contentWidth,
             scrollHeight = 800,
             listener = scrollListener,
-            backgroundColor = { 0.8, 0.8, 0.8 }
+            hideBackground = true
         }
     )
 
@@ -210,10 +280,31 @@ function scene:create( event )
     for i=0, (colour_options-1) do
         local b = setupOption(i)
         scrollView:insert(b)
-        scrollView:insert(b.costText)
         scrollView:insert(b.overlayText)
+
+        if(b.locked)
+        then
+            scrollView:insert(b.lockIconLight)
+            scrollView:insert(b.lockIconDark)
+            scrollView:insert(b.costText)
+        end
+
         table.insert(coloured_boxes,b);
     end
+
+    print("Current option is : "..colours.selected_colour)
+    cursor = display.newRoundedRect(0, 0, boxSize + 10, boxSize + 10, 2)
+    scrollView:insert(cursor)
+    cursor:setFillColor(0,0,0,0)
+    cursor:setStrokeColor(0,1,0)
+    cursor.strokeWidth = 3
+
+    print("Moving to x coord: "..coloured_boxes[colours.selected_colour + 1].x)
+    cursor.x = coloured_boxes[colours.selected_colour + 1].x
+    cursor.y = coloured_boxes[colours.selected_colour + 1].y
+
+    colours.unlockColourOption(0)
+    colours.unlockColourOption(1)
  
 end
 

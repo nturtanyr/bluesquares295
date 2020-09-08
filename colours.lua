@@ -9,6 +9,7 @@
 local C = {}
 
 C.num_of_options = 3
+C.selected_colour = 0
 
 function C.saveBoxNumbers(value)
  
@@ -40,7 +41,6 @@ function C.loadDarkMode()
 end
 
 function C.set_TextColour(textObject, show)
-    print("Trying to set text colour")
     if(show)
     then
         if(C.loadDarkMode() == 'Dark')
@@ -56,7 +56,6 @@ function C.set_TextColour(textObject, show)
 end
 
 function C.set_BackgroundColour()
-    print("Trying to set background colour")
     if(C.loadDarkMode() == 'Dark')
     then
         display.setDefault("background", 0, 0, 0, 1);
@@ -67,7 +66,6 @@ function C.set_BackgroundColour()
 end
 
 function C.set_MainColour(textObject)
-    print("Trying to set object colour")
     if(C.loadDarkMode() == 'Dark')
     then
         textObject:setFillColor(0,0,0)
@@ -77,9 +75,60 @@ function C.set_MainColour(textObject)
     
 end
 
+function C.unlockColourOption(option)
+
+    optionPreference = "optionPreference"..tostring(option)
+    preferences = {}
+    preferences[optionPreference] = "unlocked"
+    local saved = system.setPreferences( "app", preferences)
+    if ( saved == false ) then
+        print( "ERROR: could not save unlocking" )
+    end
+
+end
+
+function C.getLockedStatus(option)
+ 
+    optionPreference = "optionPreference"..tostring(option)
+    local lockstatus = system.getPreference( "app", optionPreference , "string" )
+ 
+    if ( lockstatus == "unlocked" ) then
+        return false
+    elseif ( lockstatus == "locked" ) then
+        return true
+    else
+        preferences = {}
+        preferences[optionPreference] = "locked"
+        local saved = system.setPreferences( "app", preferences)
+        return true
+    end
+
+end
+
+function C.saveSelectedColour()
+ 
+    local saved = system.setPreferences( "app", { selectedColour=C.selected_colour } )
+    if ( saved == false ) then
+        print( "ERROR: could not save current colour selection" )
+    end
+
+end
+
+function C.loadSelectedColour()
+ 
+    local selected_colour = system.getPreference( "app", "selectedColour", "number" )
+ 
+    if ( selected_colour ) then
+        return tonumber(selected_colour)
+    else
+        print( "ERROR: could not load the current selected colour" )
+        return 0
+    end
+
+end
+
 function C.change_colour(box, num, show)
     
-    print("Showing new value as "..tostring(box.heatUpLimit - box.heatUp))
     box.overlayText.text = (tostring(box.heatUpLimit - box.heatUp))
     C.set_TextColour(box.overlayText, show)
 
@@ -196,5 +245,7 @@ function C.gradient_yg(box)
     end
 
 end
+
+C.selected_colour = C.loadSelectedColour() 
 
 return C

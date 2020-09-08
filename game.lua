@@ -83,7 +83,7 @@ game_board_display = display.newGroup()
 game_ui_display = display.newGroup()
 
 -- Define current colour scheme
-colour_option = 0
+colour_option = colours.loadSelectedColour()
 boxNumbers = false;
 
 -- Get the current space size
@@ -114,10 +114,8 @@ countDownCenterY = phoneYCentre - (boxGridSize/2) - ((boxSize + 5))
 -- The grid table
 local boxGrid = {}
 -- The tap all button
-local tapAll
 local tapAllText
 -- The replay button
-local replay
 local replayText
 -- The timer that the player can see
 local clock
@@ -332,16 +330,13 @@ end
 local function display_replaybutton()
 
     -- Display it
-    replay = display.newRect(tapAllCenterX*0.5, tapAllCenterY, boxSize*1.5, boxSize*0.8);
     -- Into the game_ui_display group
-    game_board_display:insert(replay)
     replayText = display.newText( "Replay", tapAllCenterX*0.5, tapAllCenterY, "Arial", 32)
     game_ui_display:insert(replayText)
     -- Make it green
-    replay:setFillColor(0,1,0);
     -- And give it our replay_game function defined earlier
-    replay:addEventListener("tap", replay )
-    replay.tap = replay_game
+    replayText:addEventListener("tap", replayText )
+    replayText.tap = replay_game
 end
 
 -- Define the function for displaying highscores
@@ -360,16 +355,13 @@ end
 local function display_highScoreButton()
 
     -- Display it
-    highScore = display.newRect(tapAllCenterX*1.5, tapAllCenterY, boxSize*1.5, boxSize*0.8);
     -- Into the game_ui_display group
-    game_board_display:insert(highScore)
     highScoreText = display.newText( "Scores", tapAllCenterX*1.5, tapAllCenterY, "Arial", 32)
     game_ui_display:insert(highScoreText)
     -- Make it green?
-    highScore:setFillColor(0,1,0);
     -- And give it our display_highScore function defined earlier
-    highScore:addEventListener("tap", highScore )
-    highScore.tap = display_highScore
+    highScoreText:addEventListener("tap", highScoreText )
+    highScoreText.tap = display_highScore
 end
 
 -- Define the function for returning to the main menu
@@ -387,14 +379,12 @@ end
 local function display_menubutton()
 
     -- Display it
-    menuButton = display.newRect(game_board_display,tapAllCenterX, tapAllCenterY+boxSize, boxSize*2.5, boxSize*0.8);
     -- Into the game_ui_display group
-    menuButtonText = display.newText(game_ui_display, "Main Menu", tapAllCenterX, tapAllCenterY+boxSize, "Arial", 32)
+    menuButtonText = display.newText(game_ui_display, "Main Menu", tapAllCenterX, display.contentHeight, "Arial", 32)
     -- Make it green?
-    menuButton:setFillColor(0,1,0);
     -- And give it our display_highScore function defined earlier
-    menuButton:addEventListener("tap", menuButton )
-    menuButton.tap = return_menu
+    menuButtonText:addEventListener("tap", menuButtonText )
+    menuButtonText.tap = return_menu
 end
 
 -- define the function for when a box is tapped
