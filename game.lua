@@ -75,7 +75,13 @@ local function submitScore( scorevalue )
     end
 end
 -- Loud sound effects
-local boxSound = audio.loadSound( "pop.wav" )
+local boxSound
+local tapAllSound
+local powerDownSound 
+
+local backgroundMusic
+audio.reserveChannels( 1 )
+audio.setVolume( 0.25, { channel=1 } )
 
 -- Make the background white
 game_background_display = display.newGroup()
@@ -152,6 +158,7 @@ local function tap_all(self,event)
     if self.coolDown <= 0
     then
         -- It registers as being tapped
+        audio.play( tapAllSound )
         self.tapped = true
     end
 end
@@ -227,6 +234,8 @@ end
 -- Define the function for consolidating what happens when we reach Game Over
 local function game_over()
     -- We grab the high score currently saved
+    audio.play( powerDownSound )
+    audio.stop( 1 )
     lastHighScore = score.loadScore()
 
     tokens_won = math.floor(score.getScore() / 1000);
@@ -309,7 +318,8 @@ local function setup_game()
 
     countDownTimer = timer.performWithDelay( 1000, countDown_countDown, 4);
 
-
+    audio.rewind(backgroundMusic);
+    audio.play( backgroundMusic, { channel=1, loops=-1 } )
     lastHighScore = score.loadScore()
     if lastHighScore == nil
     then
@@ -528,7 +538,13 @@ function scene:create( event )
     sceneGroup:insert(game_background_display)
     sceneGroup:insert(game_board_display)
     sceneGroup:insert(game_ui_display)
- 
+    
+    -- Loud sound effects
+    boxSound = audio.loadSound( "pop.wav" )
+    tapAllSound = audio.loadSound( "popx4.wav" )
+    powerDownSound = audio.loadSound( "powerDown.wav" )
+
+    backgroundMusic = audio.loadStream( "gameloop.wav")
 end
 
 -- show()
@@ -579,6 +595,10 @@ function scene:destroy( event )
 
 	local sceneGroup = self.view
 	-- Code here runs prior to the removal of scene's view
+    audio.dispose( boxSound )
+    audio.dispose( tapAllSound )
+    audio.dispose( powerDownSound )
+    audio.dispose( backgroundMusic )
 
 end
 
